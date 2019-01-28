@@ -9,8 +9,11 @@ module Dry
         CORE_FOLDER = "#{PROJECT_NAME}/".freeze
         DEFAULT_RESOLVER = ->(k) { k.new }
 
-        def register_folder!(folder, resolver: DEFAULT_RESOLVER)
+        def register_folder!(folder, resolver: DEFAULT_RESOLVER, ignore: [])
+          regexp = ignore.any? ? Regexp.new(/(#{ignore.join("|")})$/) : nil
           all_files_in_folder(folder).each do |file|
+            next if regexp && file.match?(regexp)
+
             register_file(file, resolver)
           end
         end
