@@ -9,17 +9,17 @@ module Dry
         CORE_FOLDER = "#{PROJECT_NAME}/".freeze
         DEFAULT_RESOLVER = ->(k) { k.new }
 
-        def register_folder!(folder, resolver: DEFAULT_RESOLVER, ignore: [])
+        def register_folder!(folder, resolver: DEFAULT_RESOLVER, ignore: [], memoize: false)
           regexp = ignore.any? ? Regexp.new(/(#{ignore.join("|")})$/) : nil
           all_files_in_folder(folder).each do |file|
             next if regexp && file.match?(regexp)
 
-            register_file(file, resolver)
+            register_file(file, resolver, memoize)
           end
         end
 
-        def register_file!(file, resolver: DEFAULT_RESOLVER)
-          register_file(find_file(file), resolver)
+        def register_file!(file, resolver: DEFAULT_RESOLVER, memoize: false)
+          register_file(find_file(file), resolver, memoize)
         end
 
         private
@@ -38,9 +38,9 @@ module Dry
           end
         end
 
-        def register_file(file, resolver)
+        def register_file(file, resolver, memoize)
           register_name = file.sub(LIB_FOLDER, '').sub(CORE_FOLDER, '').tr('/', '.').sub(/_repository\z/, '')
-          register(register_name, memoize: true) { load! file, resolver }
+          register(register_name, memoize: memoize) { load! file, resolver }
         end
 
         def load!(path, resolver)
