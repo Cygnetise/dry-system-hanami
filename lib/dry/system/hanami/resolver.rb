@@ -58,7 +58,7 @@ module Dry
 
         def extract_unnecessary_part(path)
           case path
-          when /repositories/
+          when %r{repositories/(?:(?!helpers))}
             "#{CORE_FOLDER}repositories/"
           when /entities/
             "#{CORE_FOLDER}entities/"
