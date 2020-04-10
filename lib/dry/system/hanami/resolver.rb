@@ -5,12 +5,11 @@ module Dry
     module Hanami
       module Resolver
         PROJECT_NAME = ::Hanami::Environment.new.project_name
-        LIB_FOLDER = "lib/".freeze
-        CORE_FOLDER = "#{PROJECT_NAME}/".freeze
+        LIB_FOLDER = 'lib'.freeze
         DEFAULT_RESOLVER = ->(k) { k.new }
 
         def register_folder!(folder, resolver: DEFAULT_RESOLVER, ignore: [], memoize: false)
-          regexp = ignore.any? ? Regexp.new(/^#{LIB_FOLDER}#{folder}\/(#{ignore.join("|")})/) : nil
+          regexp = ignore.any? ? Regexp.new(/^#{LIB_FOLDER}\/#{folder}\/(#{ignore.join("|")})/) : nil
           all_files_in_folder(folder).each do |file|
             next if regexp && file.match?(regexp)
 
@@ -33,13 +32,13 @@ module Dry
 
         def all_files_in_folder(folder)
           Dir.chdir(::Hanami.root) do
-            Dir.glob("#{LIB_FOLDER}#{folder}/**/*.rb")
+            Dir.glob("#{LIB_FOLDER}/#{folder}/**/*.rb")
                .map! { |file_name| file_name.sub('.rb', '').to_s }
           end
         end
 
         def register_file(file, resolver, memoize)
-          register_name = file.sub(LIB_FOLDER, '').sub(CORE_FOLDER, '').tr('/', '.').sub(/_repository\z/, '')
+          register_name = file.sub(LIB_FOLDER + '/', '').sub(PROJECT_NAME + '/', '').tr('/', '.').sub(/_repository\z/, '')
           register(register_name, memoize: memoize) { load! file, resolver }
         end
 
@@ -47,9 +46,11 @@ module Dry
           load_file!(path)
 
           unnecessary_part = extract_unnecessary_part(path)
-          right_path = path.sub(LIB_FOLDER, '').sub(unnecessary_part, '')
+          right_path = path.sub(LIB_FOLDER + '/', '').sub(unnecessary_part, '')
 
           resolver.call(Object.const_get(Inflecto.camelize(right_path)))
+        rescue => e
+          binding.pry
         end
 
         def load_file!(path)
@@ -58,12 +59,12 @@ module Dry
 
         def extract_unnecessary_part(path)
           case path
-          when %r{repositories/(?:(?!helpers))}
-            "#{CORE_FOLDER}repositories/"
-          when /entities/
-            "#{CORE_FOLDER}entities/"
+          when %r{#{PROJECT_NAME}\/repositories\/(?:(?!helpers))}
+            "#{PROJECT_NAME}/repositories/"
+          when %r{#{PROJECT_NAME}\/entities\/}
+            "#{PROJECT_NAME}/entities/"
           else
-            CORE_FOLDER
+            PROJECT_NAME
           end
         end
       end
