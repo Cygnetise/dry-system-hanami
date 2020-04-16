@@ -49,8 +49,6 @@ module Dry
           right_path = path.sub(LIB_FOLDER + '/', '').sub(unnecessary_part, '')
 
           resolver.call(Object.const_get(Inflecto.camelize(right_path)))
-        rescue => e
-          binding.pry
         end
 
         def load_file!(path)
