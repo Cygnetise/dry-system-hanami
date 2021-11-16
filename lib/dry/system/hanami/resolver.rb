@@ -5,11 +5,10 @@ module Dry
     module Hanami
       module Resolver
         PROJECT_NAME = ::Hanami::Environment.new.project_name
-        LIB_FOLDER = 'lib'.freeze
         DEFAULT_RESOLVER = ->(k) { k.new }
 
         def register_folder!(folder, resolver: DEFAULT_RESOLVER, ignore: [], memoize: false)
-          regexp = ignore.any? ? Regexp.new(/^#{LIB_FOLDER}\/#{folder}\/(#{ignore.join("|")})/) : nil
+          regexp = ignore.any? ? Regexp.new(/^#{lib_folder}\/#{folder}\/(#{ignore.join("|")})/) : nil
           all_files_in_folder(folder).each do |file|
             next if regexp && file.match?(regexp)
 
@@ -32,13 +31,13 @@ module Dry
 
         def all_files_in_folder(folder)
           Dir.chdir(::Hanami.root) do
-            Dir.glob("#{LIB_FOLDER}/#{folder}/**/*.rb")
+            Dir.glob("#{lib_folder}/#{folder}/**/*.rb")
                .map! { |file_name| file_name.sub('.rb', '').to_s }
           end
         end
 
         def register_file(file, resolver, memoize)
-          register_name = file.sub(LIB_FOLDER + '/', '').sub(PROJECT_NAME + '/', '').tr('/', '.').sub(/_repository\z/, '')
+          register_name = file.sub(lib_folder + '/', '').sub(PROJECT_NAME + '/', '').tr('/', '.').sub(/_repository\z/, '')
           register(register_name, memoize: memoize) { load! file, resolver }
         end
 
@@ -46,7 +45,7 @@ module Dry
           load_file!(path)
 
           unnecessary_part = extract_unnecessary_part(path)
-          right_path = path.sub(LIB_FOLDER + '/', '').sub(unnecessary_part, '')
+          right_path = path.sub(lib_folder + '/', '').sub(unnecessary_part, '')
 
           resolver.call(Object.const_get(Inflecto.camelize(right_path)))
         end
